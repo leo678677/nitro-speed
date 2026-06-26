@@ -6,7 +6,7 @@
     <title>Nitro Speed - Edition Stylisée</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Arial, sans-serif; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: #0b0b16; color: white; }
+        body, html { width: 100%; height: 100%; overflow-x: hidden; overflow-y: auto; background: #0b0b16; color: white; }
         
         .screen { position: absolute; width: 100%; height: 100%; top: 0; left: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; background: linear-gradient(135deg, rgba(10, 10, 25, 0.98), rgba(25, 10, 10, 0.98)); }
         h1 { font-size: 70px; color: #ff2a2a; text-shadow: 0 0 20px #ff2a2a, 0 5px 0 #800000; margin-bottom: 30px; font-style: italic; font-weight: 900; letter-spacing: 2px; }
@@ -31,11 +31,12 @@
         .upgrade-bar { height: 6px; background: #333; border-radius: 3px; margin: 8px 0; overflow: hidden; }
         .upgrade-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
 
-        #gameContainer { position: relative; width: 100%; height: 100%; display: none; overflow: hidden; }
-        #canvas { display: block; background: #222; margin: 0 auto; }
+        #gameContainer { position: relative; width: 100%; height: 100vh; display: none; overflow: hidden; }
+        #canvas { display: block; background: #222; margin: 0 auto; max-width: 100%; }
         
-        #pauseBtn { position: absolute; top: 20px; left: 20px; width: 55px; height: 55px; font-size: 24px; background: rgba(15, 15, 30, 0.85); border: 2px solid #ff3333; color: white; border-radius: 50%; cursor: pointer; z-index: 5; backdrop-filter: blur(5px); transition: 0.2s; }
-        #pauseBtn:hover { background: #ff3333; transform: scale(1.1); }
+        #pauseBtn { position: absolute; top: 20px; left: 20px; width: 65px; height: 65px; font-size: 28px; background: linear-gradient(145deg, rgba(30,10,10,0.95), rgba(60,15,15,0.9)); border: 3px solid #ff3333; color: white; border-radius: 50%; cursor: pointer; z-index: 5; backdrop-filter: blur(5px); transition: 0.2s; box-shadow: 0 0 15px rgba(255,50,50,0.4), inset 0 0 10px rgba(255,50,50,0.15); text-shadow: 0 0 8px rgba(255,255,255,0.5); }
+        #pauseBtn:hover { background: #ff3333; transform: scale(1.1); box-shadow: 0 0 25px rgba(255,50,50,0.6); }
+        #pauseOverlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; font-weight: 900; color: rgba(255,50,50,0.6); text-shadow: 0 0 40px rgba(255,0,0,0.4), 0 0 80px rgba(255,0,0,0.2); z-index: 7; display: none; pointer-events: none; letter-spacing: 10px; font-style: italic; }
         #nightBtn { position: absolute; top: 20px; left: 85px; width: 55px; height: 55px; font-size: 24px; background: rgba(15, 15, 30, 0.85); border: 2px solid #ffcc00; color: white; border-radius: 50%; cursor: pointer; z-index: 5; backdrop-filter: blur(5px); transition: 0.2s; }
         #nightBtn:hover { background: #ffcc00; color: #000; transform: scale(1.1); }
         #nightBtn.night { background: #ffcc00; color: #000; }
@@ -44,23 +45,50 @@
         #nitroBar { position: absolute; bottom: 98px; left: 50%; transform: translateX(-50%); width: 200px; height: 10px; background: rgba(5,5,15,0.85); border: 2px solid #00ccff; border-radius: 6px; z-index: 5; overflow: hidden; box-shadow: 0 0 12px rgba(0,204,255,0.3); }
         #nitroFill { width: 0%; height: 100%; background: linear-gradient(90deg, #0066ff, #00ccff); border-radius: 4px; transition: width 0.1s; }
         #nitroLabel { position: absolute; bottom: 112px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #00ccff; z-index: 5; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 8px rgba(0,204,255,0.5); }
-        #volant { position: absolute; bottom: 40px; left: calc(50% - 380px); width: 120px; height: 120px; border: 10px solid #2a2a3a; border-top-color: #ff3333; border-radius: 50%; transition: transform 0.05s linear; z-index: 5; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        #volant::after { content: ''; position: absolute; top: calc(50% - 6px); left: 0; width: 100%; height: 12px; background: #2a2a3a; }
-        #levier { position: absolute; bottom: 45px; right: calc(50% - 380px); width: 50px; height: 130px; z-index: 5; }
-        #levier-pommeau { width: 36px; height: 36px; background: radial-gradient(circle at 30% 30%, #ff4444, #990000); border-radius: 50%; margin: 0 auto; transition: transform 0.1s; box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
-        #levier-tige { width: 8px; height: 90px; background: linear-gradient(90deg, #bbb, #777); margin: -5px auto 0 auto; border-radius: 4px; }
+        #volant { position: absolute; bottom: 35px; left: calc(50% - 380px); width: 140px; height: 140px; border-radius: 50%; z-index: 5; transition: transform 0.05s linear; filter: drop-shadow(0 8px 20px rgba(0,0,0,0.7)); }
+        #volant-rim { width: 100%; height: 100%; border: 14px solid #222; border-top-color: #ff3333; border-right-color: #2a2a2a; border-left-color: #2a2a2a; border-bottom-color: #1a1a1a; border-radius: 50%; box-sizing: border-box; background: radial-gradient(circle at 50% 50%, #1a1a2a 25%, #111 65%); position: relative; box-shadow: inset 0 0 12px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,50,50,0.15); }
+        #volant-rim::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 88px; height: 88px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.04); }
+        #volant-spoke-l { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); width: 70px; height: 6px; background: linear-gradient(90deg, transparent 0%, #3a3a4a 15%, #555 50%, #3a3a4a 85%, transparent 100%); border-radius: 3px; }
+        #volant-spoke-r { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 70px; height: 6px; background: linear-gradient(90deg, transparent 0%, #3a3a4a 15%, #555 50%, #3a3a4a 85%, transparent 100%); border-radius: 3px; }
+        #volant-spoke-d { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 88px; background: linear-gradient(180deg, transparent 0%, #3a3a4a 15%, #555 50%, #3a3a4a 85%, transparent 100%); border-radius: 3px; }
+        #volant-hub { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; background: radial-gradient(circle at 40% 35%, #555, #222); border-radius: 50%; border: 2px solid #444; box-shadow: inset 0 -3px 6px rgba(0,0,0,0.6), 0 2px 4px rgba(0,0,0,0.4); z-index: 1; }
+        #volant-hub::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; background: radial-gradient(circle at 40% 35%, #ff4444, #990000); border-radius: 50%; border: 2px solid #ff6666; box-shadow: 0 0 10px rgba(255,50,50,0.5); }
+        #volant-btn-l { position: absolute; top: 50%; left: 6px; transform: translateY(-50%); width: 10px; height: 10px; background: radial-gradient(circle at 40% 35%, #ff3333, #880000); border-radius: 50%; border: 1px solid #ff5555; box-shadow: 0 0 4px rgba(255,0,0,0.3); z-index: 1; }
+        #volant-btn-r { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 10px; height: 10px; background: radial-gradient(circle at 40% 35%, #33aaff, #0055aa); border-radius: 50%; border: 1px solid #55bbff; box-shadow: 0 0 4px rgba(0,100,255,0.3); z-index: 1; }
+
+        .volant-sport #volant-rim { border-top-color: #ff3333; }
+        .volant-sport #volant-hub::after { background: radial-gradient(circle at 40% 35%, #ff4444, #990000); border-color: #ff6666; }
+        .volant-hyper #volant-rim { border-top-color: #0055ff; }
+        .volant-hyper #volant-hub::after { background: radial-gradient(circle at 40% 35%, #4488ff, #0033aa); border-color: #66aaff; }
+        .volant-lambor #volant-rim { border-top-color: #ffcc00; }
+        .volant-lambor #volant-hub::after { background: radial-gradient(circle at 40% 35%, #ffdd44, #bb9900); border-color: #ffee66; }
+        .volant-f1 #volant-rim { border-top-color: #ff00ff; border-width: 10px; }
+        .volant-f1 #volant-hub::after { background: radial-gradient(circle at 40% 35%, #ff44ff, #8800aa); border-color: #ff66ff; }
+
+        #levier { position: absolute; bottom: 40px; right: calc(50% - 380px); width: 70px; height: 160px; z-index: 5; display: flex; flex-direction: column; align-items: center; }
+        #levier-pommeau { width: 36px; height: 42px; background: radial-gradient(circle at 35% 30%, #ff6666, #bb0000); border-radius: 8px 8px 12px 12px; border: 1px solid #ff5555; box-shadow: 0 6px 14px rgba(0,0,0,0.5), inset 0 2px 6px rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: rgba(255,255,255,0.7); text-shadow: 0 1px 3px rgba(0,0,0,0.6); position: relative; z-index: 2; transition: transform 0.08s; }
+        #levier-pommeau::after { content: ''; position: absolute; top: 2px; left: 6px; right: 6px; height: 6px; background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent); border-radius: 3px; }
+        #levier-tige { width: 10px; height: 65px; background: linear-gradient(90deg, #666 0%, #bbb 30%, #ddd 50%, #bbb 70%, #666 100%); border-radius: 5px; box-shadow: 0 3px 8px rgba(0,0,0,0.4); margin-bottom: -2px; position: relative; z-index: 1; }
+        #levier-tige::after { content: ''; position: absolute; top: 0; left: 2px; right: 2px; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0.15), transparent 40%, transparent 60%, rgba(255,255,255,0.08)); border-radius: 5px; }
+        #levier-boot { width: 50px; height: 40px; background: radial-gradient(ellipse at 50% 0%, #2a2a2a, #111); border-radius: 4px 4px 10px 10px; border: 2px solid #333; border-top: none; margin-top: -6px; position: relative; overflow: hidden; box-shadow: inset 0 8px 12px rgba(0,0,0,0.5); }
+        #levier-boot::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 14px; height: 6px; background: #444; border-radius: 0 0 6px 6px; }
+        #levier-boot::after { content: ''; position: absolute; top: 8px; left: 8px; right: 8px; bottom: 4px; background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,255,255,0.03) 4px, rgba(255,255,255,0.03) 5px); border-radius: 2px; }
+        #levier-pattern { position: absolute; top: -6px; right: -30px; font-size: 11px; color: #555; line-height: 1.5; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 1px; background: rgba(10,10,20,0.7); padding: 4px 6px; border-radius: 4px; border: 1px solid #333; }
+        #levier-pattern span.r { color: #ff4444; }
+        #levier-pattern span.g { color: #888; }
 
         .score-hud { position: absolute; top: 20px; right: 20px; font-size: 26px; font-weight: bold; background: rgba(10, 10, 25, 0.85); padding: 15px 25px; border-radius: 10px; border-left: 5px solid #ffcc00; text-align: right; z-index: 5; backdrop-filter: blur(5px); }
+        #diffBadge { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: bold; padding: 4px 16px; border-radius: 14px; z-index: 5; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
 
-        #touchControls { position: absolute; bottom: 100px; left: 0; right: 0; height: 200px; z-index: 6; display: none; touch-action: none; }
-        #touchControls.active { display: flex; }
-        .touch-side { flex: 1; display: flex; position: relative; }
-        .touch-btn { position: absolute; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 30px; color: rgba(255,255,255,0.6); }
-        .touch-btn.pressed { background: rgba(255,50,50,0.3); border-color: rgba(255,50,50,0.6); }
-        #touchLeft { left: 20px; bottom: 40px; }
-        #touchRight { left: 120px; bottom: 40px; }
-        #touchAccel { right: 120px; bottom: 40px; }
-        #touchBrake { right: 20px; bottom: 40px; }
+        #touchControls { position: absolute; bottom: 0; left: 0; right: 0; height: 220px; z-index: 6; display: none; touch-action: none; }
+        #touchControls.active { display: block; }
+        #joystick-area { position: absolute; left: 30px; bottom: 30px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 3px solid rgba(255,255,255,0.2); }
+        #joystick-knob { position: absolute; left: 55px; top: 55px; width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.5), rgba(255,255,255,0.15)); border: 2px solid rgba(255,255,255,0.3); pointer-events: none; transition: none; }
+        .touch-btn.r { position: absolute; width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 30px; color: rgba(255,255,255,0.6); }
+        .touch-btn.r.pressed { background: rgba(255,50,50,0.3); border-color: rgba(255,50,50,0.6); }
+        #touchNitro { right: 30px; bottom: 30px; width: 100px; height: 100px; font-size: 40px; border-color: rgba(0,204,255,0.4); }
+        #touchAccel { right: 160px; bottom: 30px; }
+        #touchBrake { right: 160px; bottom: 130px; width: 60px; height: 60px; font-size: 22px; }
 
         @media (pointer: coarse) {
             #volant, #levier { display: none; }
@@ -74,6 +102,14 @@
             .upgrade-item { width: 180px; padding: 10px 15px; }
             #speedometer { font-size: 22px; padding: 8px 20px; bottom: 15px; }
             .score-hud { font-size: 18px; padding: 10px 15px; }
+            #touchControls { height: 160px; }
+            #joystick-area { left: 15px; bottom: 15px; width: 110px; height: 110px; }
+            #joystick-knob { left: 40px; top: 40px; width: 30px; height: 30px; }
+            .touch-btn.r { width: 60px; height: 60px; font-size: 22px; }
+            #touchNitro { right: 15px; bottom: 15px; width: 75px; height: 75px; font-size: 30px; }
+            #touchAccel { right: 105px; bottom: 15px; width: 55px; height: 55px; font-size: 20px; }
+            #touchBrake { right: 105px; bottom: 85px; width: 50px; height: 50px; font-size: 18px; }
+            #gameContainer { height: 100%; }
         }
     </style>
 </head>
@@ -90,6 +126,7 @@
             <p style="margin-bottom: 15px;">⚡ <strong style="color:#ff3333;">Nitro Speed</strong> est un jeu de course arcade.</p>
             <p style="margin-bottom: 15px;">🚗 Évitez les véhicules,<br>🪙 récoltez des pièces,<br>🏆 battez vos records !</p>
             <p style="margin-bottom: 10px; font-size:16px; color:#00ffcc;">⚡ Plus vous allez vite, plus les dépassements<br>et motos rapportent points et argent !</p>
+            <p style="margin-bottom: 8px; font-size:15px; color:#ffaa44;">📊 <strong>5 niveaux de difficulté</strong> : plus votre score monte,<br>plus le trafic s'intensifie et plus les points sont <span style="color:#00ffcc;">multipliés</span> !</p>
             <p style="color:#ffcc00;">Les motos peuvent être percutées.<br>
             Les voitures, bus et camions sont mortels.</p>
         </div>
@@ -107,9 +144,9 @@
             <p><span style="color:#ffcc00;">▲</span> Lâcher l'accélérateur à fond → flamme !</p>
             <p><span style="color:#00ffcc;">💡</span> Les pièces achètent des skins et des améliorations.<br>
             <span style="color:#0088ff;">🧪</span> Les bouteilles bleues rechargent le NITRO.</p>
-            <p style="margin-top:12px;padding-top:12px;border-top:1px solid #444;color:#aaa;font-size:15px;">
-            📱 Sur téléphone :<br>
-            <span style="color:#fff;">◀ ▶</span> pour diriger &nbsp; <span style="color:#fff;">▲</span> accélérer &nbsp; <span style="color:#fff;">▼</span> freiner &nbsp; <span style="color:#00ccff;">💨</span> NITRO</p>
+            <p style="margin-top:10px;padding-top:10px;border-top:1px solid #444;font-size:14px;color:#ffaa44;">
+            📊 Difficulté : <span style="color:#44ff44;">Niv.1</span> → <span style="color:#88ff00;">Niv.2</span> → <span style="color:#ffcc00;">Niv.3</span> → <span style="color:#ff8800;">Niv.4</span> → <span style="color:#ff3333;">Niv.5</span><br>
+            Plus de trafic, plus de points ×<span style="color:#00ffcc;">1</span> à ×<span style="color:#00ffcc;">3</span> !</p>
         </div>
         <button class="btn" onclick="startGame()">Commencer !</button>
     </div>
@@ -154,9 +191,12 @@
         <button class="btn" style="background: #444455; box-shadow: none; margin-top: 20px;" onclick="closeUpgrades()">Retour aux résultats</button>
     </div>
 
-    <div id="gameContainer">
-        <button id="pauseBtn" onclick="togglePause()">||</button>
+        <div id="gameContainer">
+            <div id="pauseOverlay">⏸ PAUSE</div>
+            <button id="pauseBtn" onclick="togglePause()">⏸</button>
+
         <button id="nightBtn" onclick="toggleNight()">🌙</button>
+        <div id="diffBadge">NIVEAU 1</div>
         <div class="score-hud">
             Score: <span id="hudScore" style="color:#00ffcc;">0</span><br>
             💰 <span id="hudCoins" style="color:#ffcc00;">0</span>
@@ -165,21 +205,27 @@
         <div id="speedometer"><span id="speedVal">0</span> KM/H</div>
         <div id="nitroLabel">NITRO</div>
         <div id="nitroBar"><div id="nitroFill"></div></div>
-        <div id="volant"></div>
+        <div id="volant" class="volant-sport">
+            <div id="volant-rim">
+                <div id="volant-spoke-l"></div>
+                <div id="volant-spoke-r"></div>
+                <div id="volant-spoke-d"></div>
+                <div id="volant-hub"></div>
+                <div id="volant-btn-l"></div>
+                <div id="volant-btn-r"></div>
+            </div>
+        </div>
         <div id="levier">
-            <div id="levier-pommeau"></div>
+            <div id="levier-pommeau">N</div>
             <div id="levier-tige"></div>
+            <div id="levier-boot"></div>
+            <div id="levier-pattern"><span class="r">R</span><br><span class="g">1</span> <span class="g">3</span> <span class="g">5</span><br><span class="g">2</span> <span class="g">4</span> <span class="g">6</span></div>
         </div>
         <div id="touchControls">
-            <div class="touch-side">
-                <div class="touch-btn" id="touchLeft">◀</div>
-                <div class="touch-btn" id="touchRight">▶</div>
-            </div>
-            <div class="touch-side">
-                <div class="touch-btn" id="touchNitro" style="top:10px;right:70px;width:60px;height:60px;font-size:16px;border-color:rgba(0,204,255,0.4);">💨</div>
-                <div class="touch-btn" id="touchAccel">▲</div>
-                <div class="touch-btn" id="touchBrake">▼</div>
-            </div>
+            <div id="joystick-area"><div id="joystick-knob"></div></div>
+            <div class="touch-btn r" id="touchNitro">💨</div>
+            <div class="touch-btn r" id="touchAccel">▲</div>
+            <div class="touch-btn r" id="touchBrake">▼</div>
         </div>
     </div>
 
@@ -187,12 +233,13 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
+        const isTouchDevice = function() { return 'ontouchstart' in window || navigator.maxTouchPoints > 0; };
         const QUALITY = Math.min(window.devicePixelRatio || 1, 4);
         const W = 540;
         const H = window.innerHeight;
         canvas.width = W * QUALITY;
         canvas.height = H * QUALITY;
-        canvas.style.width = W + 'px';
+        canvas.style.width = Math.min(W, window.innerWidth) + 'px';
         canvas.style.height = H + 'px';
         ctx.scale(QUALITY, QUALITY);
 
@@ -204,6 +251,7 @@
         let highscores = JSON.parse(localStorage.getItem('nitro_highscores_v2')) || [0, 0, 0];
         let flameFlicker = 0;
         let nightMode = false;
+        let smokeParticles = [];
 
         let carSkins = [
             { id: 'red', name: 'GT Turbo', brand: 'Nissan Concept', color: '#ff2a2a', design: 'sport', cost: 0 },
@@ -233,10 +281,50 @@
         let upgradeCosts = [50, 100, 180, 280, 400, 550, 750, 1000, 1300, 1800];
         const MAX_UPGRADE = 10;
 
+        let diffLevels = [
+            { min: 0, name: 'NIVEAU 1', color: '#44ff44', mult: 1, spawnMult: 1, maxV: 4 },
+            { min: 500, name: 'NIVEAU 2', color: '#66ff00', mult: 1.8, spawnMult: 1.3, maxV: 5 },
+            { min: 1500, name: 'NIVEAU 3', color: '#ffcc00', mult: 2.5, spawnMult: 1.7, maxV: 6 },
+            { min: 3500, name: 'NIVEAU 4', color: '#ff6600', mult: 3.5, spawnMult: 2.2, maxV: 7 },
+            { min: 6000, name: 'NIVEAU 5', color: '#ff2222', mult: 5, spawnMult: 3, maxV: 9 }
+        ];
+
+        function getDifficulty() {
+            let d = diffLevels[0];
+            for (let i = diffLevels.length - 1; i >= 0; i--) {
+                if (score >= diffLevels[i].min) { d = diffLevels[i]; break; }
+            }
+            return d;
+        }
+
         function getStatBonus(id) {
             let def = upgradeDefs.find(d => d.id === id);
             let lvl = upgradeLevels[id] || 0;
             return def ? lvl * def.perLevel : 0;
+        }
+
+        let currentGear = 1;
+        let prevGear = 1;
+        let gearShiftTimer = 0;
+        let gearAccelMult = [0, 1.0, 0.85, 0.7, 0.55, 0.4, 0.3];
+        function getGearMax(g) {
+            let ms = player.maxSpeed;
+            return (ms * g) / 6;
+        }
+        function updateGear() {
+            prevGear = currentGear;
+            let ms = player.maxSpeed;
+            if (currentGear < 6 && player.speed >= getGearMax(currentGear)) currentGear++;
+            if (currentGear > 1 && player.speed < getGearMax(currentGear - 1) - ms * 0.08) currentGear--;
+            if (currentGear !== prevGear && currentGear > prevGear) {
+                gearShiftTimer = 10;
+                player.speed *= 0.88;
+            }
+            if (gearShiftTimer > 0) gearShiftTimer--;
+        }
+        function getAccelMult() {
+            if (player.nitroActive) return 1.8;
+            return gearAccelMult[currentGear] || 0.3;
         }
 
         let player = {
@@ -246,7 +334,7 @@
             h: 85,
             speed: 0,
             get maxSpeed() { return upgradeDefs[0].base + getStatBonus('moteur'); },
-            get accel() { return upgradeDefs[2].base + getStatBonus('accel'); },
+            get accel() { return (upgradeDefs[2].base + getStatBonus('accel')) * getAccelMult(); },
             get decel() { return Math.max(0.03, 0.06 - upgradeLevels.freins * 0.002); },
             get braking() { return upgradeDefs[1].base + getStatBonus('freins'); },
             get handling() { return upgradeDefs[3].base + getStatBonus('manieman'); },
@@ -269,7 +357,7 @@
             let k = e.key.toLowerCase();
             if(k in keys) keys[k] = true;
             if(k === 'n') toggleNight();
-            if(e.code === 'Space') { e.preventDefault(); activateNitro(); }
+            if(e.code === 'Space' && !e.repeat) { e.preventDefault(); activateNitro(); }
         });
         window.addEventListener('keyup', (e) => { 
             let k = e.key.toLowerCase(); 
@@ -280,6 +368,20 @@
                     player.flameTimer = 45;
                 }
             } 
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                let notice = document.getElementById('noticeScreen');
+                let tutorial = document.getElementById('tutorialScreen');
+                let gameOver = document.getElementById('gameOverScreen');
+                let shop = document.getElementById('shopScreen');
+                let upgrade = document.getElementById('upgradeScreen');
+                if (notice.style.display === 'flex') showTutorial();
+                else if (tutorial.style.display === 'flex') startGame();
+                else if (gameOver.style.display === 'flex' && shop.style.display !== 'flex' && upgrade.style.display !== 'flex') restartGame();
+                else if (document.getElementById('mainMenu').style.display !== 'none') showNotice();
+            }
         });
 
         function touchStart(id) {
@@ -295,13 +397,15 @@
         }
 
         function activateNitro() {
-            if (player.nitroFuel > 0 && !player.nitroActive) {
+            if (player.nitroActive) {
+                player.nitroActive = false;
+            } else if (player.nitroFuel > 0) {
                 player.nitroActive = true;
             }
         }
 
-        let touchMap = { touchLeft: 'q', touchRight: 'd', touchAccel: 'z', touchBrake: 's', touchNitro: ' ' };
-        document.querySelectorAll('.touch-btn').forEach(el => {
+        let touchMap = { touchAccel: 'z', touchBrake: 's', touchNitro: ' ' };
+        document.querySelectorAll('.touch-btn.r').forEach(el => {
             el.addEventListener('touchstart', (e) => { e.preventDefault(); el.classList.add('pressed'); touchStart(touchMap[el.id]); });
             el.addEventListener('touchend', (e) => { e.preventDefault(); el.classList.remove('pressed'); touchEnd(touchMap[el.id]); });
             el.addEventListener('touchcancel', (e) => { el.classList.remove('pressed'); touchEnd(touchMap[el.id]); });
@@ -310,11 +414,63 @@
             el.addEventListener('mouseleave', (e) => { el.classList.remove('pressed'); touchEnd(touchMap[el.id]); });
         });
 
+        let joystickActive = false;
+        let joystickId = null;
+        let jArea = document.getElementById('joystick-area');
+        let jKnob = document.getElementById('joystick-knob');
+        if (jArea) {
+            jArea.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                joystickActive = true;
+                let t = e.changedTouches[0];
+                joystickId = t.identifier;
+                moveJoystick(t.clientX, t.clientY);
+            });
+            jArea.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let t of e.changedTouches) {
+                    if (t.identifier === joystickId) moveJoystick(t.clientX, t.clientY);
+                }
+            });
+            jArea.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                for (let t of e.changedTouches) {
+                    if (t.identifier === joystickId) resetJoystick();
+                }
+            });
+            jArea.addEventListener('touchcancel', (e) => { resetJoystick(); });
+        }
+        function moveJoystick(cx, cy) {
+            let rect = jArea.getBoundingClientRect();
+            let centerX = rect.left + rect.width / 2;
+            let centerY = rect.top + rect.height / 2;
+            let dx = cx - centerX;
+            let dy = cy - centerY;
+            let maxDist = rect.width / 2 - 20;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist > maxDist) { dx *= maxDist / dist; dy *= maxDist / dist; }
+            let kn = jKnob.getBoundingClientRect();
+            let cox = (rect.width - kn.width) / 2;
+            let coy = (rect.height - kn.height) / 2;
+            jKnob.style.left = (cox + dx) + 'px';
+            jKnob.style.top = (coy + dy) + 'px';
+            let norm = dist > 5 ? Math.min(dist / maxDist, 1) : 0;
+            keys['q'] = norm > 0.15 && dx < -5;
+            keys['d'] = norm > 0.15 && dx > 5;
+            if (norm <= 0.15 || Math.abs(dx) <= 5) { keys['q'] = false; keys['d'] = false; }
+        }
+        function resetJoystick() {
+            joystickActive = false;
+            joystickId = null;
+            jKnob.style.left = '';
+            jKnob.style.top = '';
+            keys['q'] = false;
+            keys['d'] = false;
+        }
+
         function activateTouchControls() {
             let tc = document.getElementById('touchControls');
-            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-                tc.classList.add('active');
-            }
+            if (isTouchDevice()) tc.classList.add('active');
         }
 
         function showNotice() {
@@ -356,7 +512,8 @@
 
         function togglePause() {
             isPaused = !isPaused;
-            document.getElementById('pauseBtn').innerText = isPaused ? "▶" : "||";
+            document.getElementById('pauseBtn').innerText = isPaused ? "▶" : "⏸";
+            document.getElementById('pauseOverlay').style.display = isPaused ? 'block' : 'none';
         }
 
         function toggleNight() {
@@ -377,6 +534,8 @@
         }
 
         function updatePhysics() {
+            updateGear();
+
             if (player.nitroActive) {
                 let target = player.maxSpeed + player.maxSpeed * 0.4;
                 if (player.speed < target) player.speed += player.accel * 2.5;
@@ -389,7 +548,7 @@
                 if (player.speed < player.maxSpeed) player.speed = player.maxSpeed;
             }
 
-            if (keys.z) {
+            if (keys.z || (isTouchDevice() && !keys.s)) {
                 if (player.speed < player.maxSpeed) player.speed += player.accel;
             } else if (keys.s) {
                 if (player.speed > -2) player.speed -= player.braking;
@@ -410,6 +569,7 @@
 
             document.getElementById('volant').style.transform = `rotate(${keys.q ? -40 : (keys.d ? 40 : 0)}deg)`;
             document.getElementById('levier-pommeau').style.transform = `translateY(${keys.z ? -18 : (keys.s ? 18 : 0)}px)`;
+            document.getElementById('levier-pommeau').textContent = player.speed < 0 ? 'R' : currentGear;
 
             roadOffset += player.speed;
             if (roadOffset > H) roadOffset = 0;
@@ -471,9 +631,10 @@
                     if (v.trail.length > 25) v.trail.shift();
                 }
 
+                let diff = getDifficulty();
                 if (!v.passed && v.y > player.y + player.h) {
                     v.passed = true;
-                    score += Math.round(8 + player.speed * 3);
+                    score += Math.round((8 + player.speed * 3) * diff.mult);
                 }
 
                 if (checkCollision(player, v)) {
@@ -491,7 +652,7 @@
                             animStyle: Math.floor(Math.random() * 6), color: bikerColor
                         });
                         e_vehicles.splice(index, 1);
-                        score += Math.round(4 + player.speed * 2);
+                        score += Math.round((4 + player.speed * 2) * diff.mult);
                     } else {
                         endGame();
                     }
@@ -515,9 +676,40 @@
             }
 
             flameFlicker += 0.3;
+
+            if (player.speed > 3) {
+                let emitRate = player.nitroActive ? 1 : 0;
+                if (Math.random() < 0.3) emitRate = 1;
+                for (let i = 0; i < emitRate; i++) {
+                    let sx = player.x + player.w * (0.2 + Math.random() * 0.6);
+                    let sy = player.y + player.h + 5;
+                    smokeParticles.push({
+                        x: sx, y: sy, vx: (Math.random() - 0.5) * 0.8,
+                        vy: 0.3 + Math.random() * 0.8, life: 50 + Math.random() * 40,
+                        maxLife: 50 + Math.random() * 40, size: 5 + Math.random() * 6,
+                        isNitro: player.nitroActive
+                    });
+                }
+            }
+            for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                let p = smokeParticles[i];
+                p.x += p.vx + 0.15;
+                p.y += p.vy;
+                p.vy -= 0.015;
+                p.life--;
+                if (p.life <= 0) { smokeParticles.splice(i, 1); continue; }
+                if (p.y > H + 50) { smokeParticles.splice(i, 1); }
+            }
+
             document.getElementById('speedVal').innerText = Math.round(player.speed * 16);
             document.getElementById('hudScore').innerText = score;
             document.getElementById('hudCoins').innerText = sessionCoins;
+            let diff = getDifficulty();
+            let db = document.getElementById('diffBadge');
+            db.innerText = diff.name + '  ×' + (diff.mult % 1 === 0 ? diff.mult : diff.mult.toFixed(1));
+            db.style.background = diff.color + '22';
+            db.style.border = '2px solid ' + diff.color;
+            db.style.color = diff.color;
             let pct = Math.min(100, (player.nitroFuel / Math.max(1, player.nitroDuration)) * 100);
             document.getElementById('nitroFill').style.width = pct + '%';
             let nBtn = document.getElementById('touchNitro');
@@ -554,13 +746,15 @@
         function spawnElements() {
             if (player.speed <= 2) return;
 
-            if (Math.random() < 0.018 && e_vehicles.length < 5) {
+            let diff = getDifficulty();
+
+            if (Math.random() < 0.018 * diff.spawnMult && e_vehicles.length < diff.maxV) {
                 let types = [
                     { type: 'voiture', w: 42, h: 80, speed: 9, color: '#2a82e6' },
                     { type: 'camion', w: 48, h: 140, speed: 6, color: '#cc5500' },
                     { type: 'camion', w: 50, h: 130, speed: 5, color: '#4a7a3a' },
                     { type: 'bus', w: 50, h: 160, speed: 7, color: '#dd3333' },
-                    { type: 'moto', w: 22, h: 50, speed: 12, color: '#111' },
+                    { type: 'moto', w: 22, h: 50, speed: 12, color: '#556' },
                     { type: 'moto_gold', w: 24, h: 50, speed: 14, color: '#ffcc00' },
                     { type: 'moto_rare', w: 24, h: 50, speed: 15, color: '#ff00ff' },
                     { type: 'moto_rainbow', w: 24, h: 50, speed: 16, color: 'rainbow' }
@@ -568,13 +762,13 @@
                 
                 let rand = Math.random();
                 let chosen = types[0];
-                if (rand > 0.975) chosen = types[7];
-                else if (rand > 0.945) chosen = types[6];
-                else if (rand > 0.90) chosen = types[5];
-                else if (rand > 0.76) chosen = types[4];
-                else if (rand > 0.60) chosen = types[3];
-                else if (rand > 0.42) chosen = types[2];
-                else if (rand > 0.22) chosen = types[1];
+                if (rand > 0.965) chosen = types[7];
+                else if (rand > 0.93) chosen = types[6];
+                else if (rand > 0.88) chosen = types[5];
+                else if (rand > 0.58) chosen = types[4];
+                else if (rand > 0.40) chosen = types[3];
+                else if (rand > 0.24) chosen = types[2];
+                else if (rand > 0.12) chosen = types[1];
 
                 let lanes = [85, 175, 265, 355];
                 let laneX = lanes[Math.floor(Math.random() * lanes.length)] + (40 - chosen.w)/2;
@@ -589,7 +783,7 @@
                 }
             }
 
-            if (Math.random() < 0.025 && e_coins.length < 6) {
+            if (Math.random() < 0.04 && e_coins.length < 10) {
                 let lanes = [100, 190, 280, 370];
                 e_coins.push({ x: lanes[Math.floor(Math.random() * lanes.length)], y: -50, w: 18, h: 18 });
             }
@@ -603,16 +797,16 @@
         function draw() {
             ctx.clearRect(0, 0, W, H);
 
-            ctx.fillStyle = nightMode ? "#050d05" : "#142c14";
+            ctx.fillStyle = nightMode ? "#050d05" : "#1e4a1e";
             ctx.fillRect(0, 0, W, H);
             
-            ctx.fillStyle = nightMode ? "#081a08" : "#193d19";
+            ctx.fillStyle = nightMode ? "#081a08" : "#2a662a";
             for (let y = (roadOffset % 80) - 80; y < H; y += 80) {
                 ctx.fillRect(0, y, 60, 40);
                 ctx.fillRect(W - 60, y, 60, 40);
             }
 
-            ctx.fillStyle = nightMode ? "#0a0a12" : "#1e1e24";
+            ctx.fillStyle = nightMode ? "#0a0a12" : "#2e2e38";
             ctx.fillRect(60, 0, W - 120, H);
 
             let vibY = (roadOffset % 40) - 40;
@@ -701,95 +895,103 @@
 
             let activeCarColor = carSkins.find(s => s.id === activeCarSkin)?.color || '#ff2a2a';
             let activeFlameColor = flameSkins.find(s => s.id === activeFlameSkin)?.color || '#ff5500';
-
-            if (player.flameActive) {
-                let fc = activeFlameColor;
-                let flick = Math.sin(flameFlicker * 3) * 0.15 + 0.85;
-                let fw = player.w * 0.7;
-                let fh = 30 + Math.sin(flameFlicker * 5) * 10;
-                let fx = player.x + (player.w - fw) / 2;
-                let fy = player.y + player.h;
-
-                ctx.globalAlpha = 0.3 * flick;
-                ctx.fillStyle = "#fff";
-                ctx.beginPath();
-                ctx.moveTo(fx + fw * 0.3, fy + fh * 0.5);
-                ctx.lineTo(fx + fw / 2, fy + fh * 1.4);
-                ctx.lineTo(fx + fw * 0.7, fy + fh * 0.5);
-                ctx.closePath();
-                ctx.fill();
-                ctx.globalAlpha = 1;
-
-                ctx.globalAlpha = 0.6 * flick;
-                ctx.fillStyle = fc;
-                for (let t = 0; t < 4; t++) {
-                    let ox = Math.sin(flameFlicker * 2 + t * 2) * 4;
-                    let oy = Math.cos(flameFlicker * 3 + t * 1.5) * 3;
-                    let tw = fw * (0.4 + Math.sin(flameFlicker + t) * 0.15);
-                    let th = fh * (0.6 + Math.cos(flameFlicker * 1.5 + t) * 0.2);
-                    ctx.beginPath();
-                    ctx.moveTo(fx + fw / 2 - tw / 2 + ox, fy + oy);
-                    ctx.quadraticCurveTo(fx + fw / 2 + ox, fy - th * 0.8 + oy, fx + fw / 2 + tw / 2 + ox, fy + oy);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-                ctx.globalAlpha = 1;
-            }
+            let skinDesign = carSkins.find(s => s.id === activeCarSkin)?.design || 'sport';
+            document.getElementById('volant').className = 'volant-' + skinDesign;
 
             let nitroPct = (player.nitroFuel / Math.max(1, player.nitroDuration)) * 100;
-            if (nitroPct > 90 && !player.nitroActive) {
-                let flick = Math.sin(flameFlicker * 5) * 0.15 + 0.85;
-                let fw = player.w * 0.5;
-                let fh = 10 + Math.sin(flameFlicker * 7) * 5;
-                let fx = player.x + (player.w - fw) / 2;
-                let fy = player.y + player.h;
-                ctx.globalAlpha = 0.3 * flick;
-                ctx.fillStyle = "#44aaff";
-                for (let t = 0; t < 3; t++) {
-                    let ox = Math.sin(flameFlicker * 3 + t * 3) * 3;
-                    let tw = fw * 0.3;
-                    ctx.beginPath();
-                    ctx.arc(fx + fw / 2 + ox, fy + fh * 0.5, tw * 0.5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                ctx.globalAlpha = 1;
-            }
 
-            if (player.nitroActive) {
-                let flick = Math.sin(flameFlicker * 4) * 0.12 + 0.88;
-                let fw = player.w * 0.9;
-                let fh = 40 + Math.sin(flameFlicker * 6) * 12;
-                let fx = player.x + (player.w - fw) / 2;
-                let fy = player.y + player.h - 5;
-
-                ctx.globalAlpha = 0.4 * flick;
-                ctx.fillStyle = "#aaddff";
+            // Smoke wisps behind car (soft, not bubbly)
+            smokeParticles.forEach(p => {
+                let alpha = (p.life / p.maxLife) * 0.2;
+                ctx.globalAlpha = alpha;
+                let grow = 1 + (1 - p.life / p.maxLife) * 1.5;
+                let sw = p.size * grow * 1.2;
+                let sh = p.size * grow * 0.5;
+                ctx.fillStyle = p.isNitro ? "rgba(160,210,255,0.3)" : "rgba(200,195,185,0.25)";
                 ctx.beginPath();
-                ctx.moveTo(fx + fw * 0.25, fy + fh * 0.4);
-                ctx.lineTo(fx + fw / 2, fy + fh * 1.6);
-                ctx.lineTo(fx + fw * 0.75, fy + fh * 0.4);
+                ctx.ellipse(p.x, p.y - 4, sw, sh, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            drawRoundedCar(player.x, player.y, player.w, player.h, activeCarColor, skinDesign);
+
+            let fc = activeFlameColor;
+            let fw = player.w * 0.9;
+            let fh = 35 + Math.sin(flameFlicker * 5) * 12;
+            let fx = player.x + (player.w - fw) / 2;
+            let fy = player.y + player.h - 2;
+
+            function drawFlameTongue(cx, cy, len, width, color, blur) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = blur;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(cx - width/2, cy);
+                ctx.quadraticCurveTo(cx - width/3, cy - len * 0.6, cx, cy - len);
+                ctx.quadraticCurveTo(cx + width/3, cy - len * 0.6, cx + width/2, cy);
                 ctx.closePath();
                 ctx.fill();
-                ctx.globalAlpha = 1;
+            }
 
-                ctx.globalAlpha = 0.7 * flick;
-                ctx.fillStyle = "#0088ff";
-                for (let t = 0; t < 5; t++) {
-                    let ox = Math.sin(flameFlicker * 2.5 + t * 2) * 5;
-                    let oy = Math.cos(flameFlicker * 3.5 + t * 1.8) * 4;
-                    let tw = fw * (0.5 + Math.sin(flameFlicker + t * 1.5) * 0.15);
-                    let th = fh * (0.7 + Math.cos(flameFlicker * 2 + t) * 0.2);
-                    ctx.beginPath();
-                    ctx.moveTo(fx + fw / 2 - tw / 2 + ox, fy + oy);
-                    ctx.quadraticCurveTo(fx + fw / 2 + ox, fy - th * 0.9 + oy, fx + fw / 2 + tw / 2 + ox, fy + oy);
-                    ctx.closePath();
-                    ctx.fill();
+            // Continuous exhaust flame when driving fast
+            if (player.speed > 4 && !player.nitroActive) {
+                let flick = Math.sin(flameFlicker * 8 + player.x) * 0.2 + 0.8;
+                let cx = fx + fw / 2;
+                let base = 4 + player.speed * 0.3;
+                let count = 2 + Math.floor(player.speed / 5);
+                ctx.globalAlpha = 0.35 * flick;
+                for (let i = 0; i < count; i++) {
+                    let t = flameFlicker * 3 + i * 1.8;
+                    let ox = Math.sin(t) * 5;
+                    let len = base + Math.sin(t * 1.3 + i) * 3;
+                    let w = 4 + Math.sin(t * 0.7 + i * 2) * 2;
+                    let clr = i % 2 === 0 ? "#ff6600" : "#ffaa00";
+                    drawFlameTongue(cx + ox, fy + 2, len, w, clr, 10 * flick);
                 }
+                ctx.shadowBlur = 0;
                 ctx.globalAlpha = 1;
             }
 
-            let skinDesign = carSkins.find(s => s.id === activeCarSkin)?.design || 'sport';
-            drawRoundedCar(player.x, player.y, player.w, player.h, activeCarColor, skinDesign);
+            // Burst flame when releasing accelerator
+            if (player.flameActive) {
+                let progress = 1 - (player.flameTimer / 45);
+                let flick = Math.sin(flameFlicker * 6) * 0.15 + 0.85;
+                let cx = fx + fw / 2;
+                let burst = 6 + progress * 28;
+                let count = 4 + Math.floor(progress * 8);
+                ctx.globalAlpha = (0.7 - progress * 0.5) * flick;
+                for (let i = 0; i < count; i++) {
+                    let angle = (i / count) * Math.PI * 2 + progress * 2;
+                    let ox = Math.cos(angle) * burst * 0.3;
+                    let oy = Math.sin(angle) * burst * 0.5 - burst * 0.3;
+                    let len = burst * (0.5 + Math.sin(flameFlicker * 4 + i * 2) * 0.3);
+                    let w = 5 + Math.sin(flameFlicker * 3 + i * 1.5) * 3;
+                    let hue = 30 + i * 8;
+                    drawFlameTongue(cx + ox, fy + 2 + oy, len, w, `hsl(${hue}, 100%, 55%)`, 25 * flick);
+                }
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
+
+            // Nitro flame (blue + orange tongues)
+            if (player.nitroActive) {
+                let flick = Math.sin(flameFlicker * 7) * 0.12 + 0.88;
+                let cx = fx + fw / 2;
+                let len = 14 + Math.sin(flameFlicker * 5) * 6;
+                ctx.globalAlpha = 0.4 * flick;
+                for (let i = 0; i < 4; i++) {
+                    let t = flameFlicker * 4 + i * 1.6;
+                    let ox = Math.sin(t) * 6;
+                    let ol = len + Math.sin(t * 1.2 + i * 3) * 4;
+                    let w = 5 + Math.sin(t * 0.8 + i) * 3;
+                    let clr = i < 2 ? "#ff6600" : "#0088ff";
+                    let bl = i < 2 ? 18 : 25;
+                    drawFlameTongue(cx + ox, fy + 2, ol, w, clr, bl * flick);
+                }
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
 
             e_airborneBikers.forEach(b => {
                 ctx.save();
@@ -1091,7 +1293,7 @@
                     let hue = (Date.now() * 0.15 + x + y) % 360;
                     bodyColor = 'hsl(' + hue + ', 100%, 60%)'; innerColor = 'hsla(' + hue + ', 100%, 40%, 0.6)'; riderColor = 'hsl(' + (hue + 30) + ', 100%, 50%)'; skinColor = '#ffaacc'; wheelColor = '#666';
                 } else {
-                    bodyColor = '#111'; innerColor = '#333'; riderColor = '#222'; skinColor = '#deb887'; wheelColor = '#555';
+                    bodyColor = '#445'; innerColor = '#667'; riderColor = '#334'; skinColor = '#deb887'; wheelColor = '#777';
                 }
 
                 roundRect(x, y, w, h, 4);
@@ -1128,6 +1330,17 @@
                 ctx.arc(x + w + 2, y + 8, 3, 0, Math.PI * 2);
                 ctx.fill();
             } else if (type === 'camion') {
+                ctx.fillStyle = "#333";
+                ctx.beginPath(); ctx.arc(x - 2, y + 18, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + 18, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x - 2, y + h - 20, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 20, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#555";
+                ctx.beginPath(); ctx.arc(x - 2, y + 18, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + 18, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x - 2, y + h - 20, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 20, 3, 0, Math.PI * 2); ctx.fill();
+
                 roundRect(x, y, w, h, 6);
                 ctx.fillStyle = color;
                 ctx.fill();
@@ -1151,18 +1364,18 @@
                 ctx.fill();
                 roundRect(x + w - 2, y + h - 16, 3, 8, 1);
                 ctx.fill();
-
-                ctx.fillStyle = "#333";
-                ctx.beginPath(); ctx.arc(x - 2, y + 18, 5, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + 18, 5, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x - 2, y + h - 20, 5, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 20, 5, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#555";
-                ctx.beginPath(); ctx.arc(x - 2, y + 18, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + 18, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x - 2, y + h - 20, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 20, 3, 0, Math.PI * 2); ctx.fill();
             } else if (type === 'bus') {
+                ctx.fillStyle = "#333";
+                ctx.beginPath(); ctx.arc(x - 2, y + 20, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + 20, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x - 2, y + h - 18, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 18, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = "#555";
+                ctx.beginPath(); ctx.arc(x - 2, y + 20, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + 20, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x - 2, y + h - 18, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 18, 4, 0, Math.PI * 2); ctx.fill();
+
                 roundRect(x, y, w, h, 8);
                 ctx.fillStyle = color;
                 ctx.fill();
@@ -1183,17 +1396,6 @@
                 ctx.fillStyle = "#ffee88";
                 roundRect(x + w - 1, y + 90, 4, 12, 1);
                 ctx.fill();
-
-                ctx.fillStyle = "#333";
-                ctx.beginPath(); ctx.arc(x - 2, y + 20, 6, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + 20, 6, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x - 2, y + h - 18, 6, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 18, 6, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = "#555";
-                ctx.beginPath(); ctx.arc(x - 2, y + 20, 4, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + 20, 4, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x - 2, y + h - 18, 4, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(x + w + 2, y + h - 18, 4, 0, Math.PI * 2); ctx.fill();
             } else {
                 roundRect(x, y, w, h, r);
                 ctx.fillStyle = color;
